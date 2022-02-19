@@ -1,0 +1,60 @@
+syntax = "proto3"; // Qual a versão mais atual?
+
+option java_multiple_files = true; // Existe alguma vantagem ou desvantagem?
+
+option java_package = "grpc"; // Pacote onde serão criadas as classes e seus componentes
+option java_outer_classname = "ProductProto";
+
+service Product {
+  rpc CallProduct (ProductRequest) returns (ProductRepply) {}
+  rpc SaveProduct (SaveProductRequest) returns (SaveProductReply) {}
+  rpc ListProductById (FindProductById) returns (ProductList){}
+  rpc ListProducts (FindProducts) returns (ProductList){}
+  rpc DeletProduct (DeletProductRequest) returns (DeletProductResponse){}
+}
+
+message ProductRequest {
+  string name  = 1; // Atenção pois o tipo do dado é colocado com letra minúscula no arquivo Proto
+}
+
+message ProductRepply {
+  string message = 1;
+}
+
+message SaveProductRequest{
+  int64 id = 1;
+  string name = 2;
+  int64 stock = 3;
+  float price = 4;
+}
+
+message SaveProductReply{
+  string message = 1;
+}
+
+message ProductModel{
+  int64 id = 1;
+  string name = 2;
+  int64 stock = 3;
+  double price = 4;
+}
+
+message FindProductById{
+  int32 id = 1;
+}
+
+message FindProducts{
+
+}
+
+message ProductList{
+  repeated ProductList listProducts = 1;
+}
+
+message DeletProductRequest{
+  int32 id=1;
+}
+
+message DeletProductResponse{
+  string message = 1;
+}
