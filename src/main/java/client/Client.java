@@ -14,25 +14,22 @@ public class Client {
     ManagedChannel managedChannel = ManagedChannelBuilder.forAddress("127.0.0.1", 8082).usePlaintext().build();
     ProductGrpc.ProductBlockingStub stub = ProductGrpc.newBlockingStub(managedChannel);
 
-    // Salvar
-//    SaveProductRequest saveProduct = grpc.SaveProductRequest.newBuilder()
-//        .setId(1)
-//        .setName("Coca Cola")
-//        .setStock(250)
-//        .setPrice(12f)
-//        .build();
-//    stub.saveProduct(saveProduct);
+    SaveProductRequest saveProduct = grpc.SaveProductRequest.newBuilder()
+        .setId(1)
+        .setName("Coca Cola")
+        .setStock(250)
+        .setPrice(12f)
+        .build();
+    stub.saveProduct(saveProduct);
 
-//     Buscar por ID
-//    FindProductById findProductById = grpc.FindProductById
-//        .newBuilder()
-//        .setId(1)
-//        .build();
-//    stub.listProductById(findProductById);
+    FindProductById findProductById = grpc.FindProductById
+        .newBuilder()
+        .setId(1)
+        .build();
+    stub.listProductById(findProductById);
 
-    // Listar Todos os Produtos
-//    FindProducts findProducts = grpc.FindProducts.newBuilder().build();
-//    stub.listProducts(findProducts);
+    FindProducts findProducts = grpc.FindProducts.newBuilder().build();
+    stub.listProducts(findProducts);
 
     DeletProductRequest deletProductRequest = grpc.DeletProductRequest
         .newBuilder()
