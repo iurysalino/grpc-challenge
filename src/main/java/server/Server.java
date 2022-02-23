@@ -1,10 +1,9 @@
 package server;
 
 import java.io.IOException;
-import java.sql.SQLException;
 
 import io.grpc.ServerBuilder;
-import service.SaveProductService;
+import service.ProductService;
 
 public class Server {
 
