@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -31,34 +31,27 @@
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
-        <!--   Dependências para gRPC e ProtoBuffer    -->
-        <!-- layer de rede -->
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty</artifactId>
             <version>1.44.0</version>
         </dependency>
-        <!-- Encodar a Estrutura de Dados no Formato ProtoBuffer -->
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
             <version>3.19.4</version>
         </dependency>
-        <!-- Suport ao ProtoBuffer Layer -->
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
             <version>1.44.0</version>
         </dependency>
-        <!-- Suport ao Stub do Servidor -->
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
             <version>1.44.0</version>
         </dependency>
     </dependencies>
-
-    <!--  Plugins Utilizados para Geração das Classes Atumáticas  -->
     <build>
         <plugins>
             <plugin>
