@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Properties;
 
 import grpc.DeletProductRequest;
 import grpc.DeletProductResponse;
@@ -19,18 +20,17 @@ import model.Product;
 
 public class ProductService extends ProductGrpc.ProductImplBase {
 
-  private final String URL = "jdbc:postgresql://localhost:5438/postgres";
-  private final String USER = "postgres";
-  private final String PASSWORD = "postgres123";
-
-  private Connection newConnection() throws SQLException {
-    Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-    return connection;
+  private Connection newConnection() throws SQLException, IOException {
+    FileInputStream fileInputStream = new FileInputStream("connection.properties");
+    Properties properties = new Properties();
+    properties.load(fileInputStream);
+    Connection connection;
+    return  connection = DriverManager.getConnection(properties.getProperty("URL"), properties.getProperty("USER"),
+        properties.getProperty("PASSWORD"));
   }
 
   @Override
-  public void saveProduct(SaveProductRequest request, StreamObserver<SaveProductReply> responseObserver)
-      throws SQLException {
+  public void saveProduct(SaveProductRequest request, StreamObserver<SaveProductReply> responseObserver) {
     SaveProductReply.Builder response = SaveProductReply.newBuilder();
     String caller2 = request.getName();
     int caller3 = (int) request.getStock();
@@ -51,7 +51,8 @@ public class ProductService extends ProductGrpc.ProductImplBase {
   }
 
   @Override
-  public void listProducts(FindProducts request, StreamObserver<ProductList> responseObserver) {
+  public void listProducts(FindProducts request, StreamObserver<ProductList> responseObserver)
+      throws SQLException, IOException {
     ProductList.Builder response = ProductList.newBuilder();
     Product product = new Product();
     try (PreparedStatement preparedStatement = newConnection().prepareStatement("SELECT * FROM products")) {
@@ -64,14 +65,14 @@ public class ProductService extends ProductGrpc.ProductImplBase {
         product.setPrice(resultSet.getDouble("price"));
         System.out.println(product.getId() + " : " + product.getNome());
       }
-    } catch (SQLException e) {
     }
     responseObserver.onNext(response.build());
     responseObserver.onCompleted();
   }
 
   @Override
-  public void listProductById(FindProductById request, StreamObserver<ProductList> responseObserver) {
+  public void listProductById(FindProductById request, StreamObserver<ProductList> responseObserver)
+      throws SQLException, IOException {
     ProductList.Builder response = ProductList.newBuilder();
     int caller = request.getId();
     Product product = new Product();
@@ -85,22 +86,20 @@ public class ProductService extends ProductGrpc.ProductImplBase {
         product.setStock(resultSet.getInt("stock"));
         product.setPrice(resultSet.getDouble("price"));
       }
-    } catch (SQLException e) {
     }
     responseObserver.onNext(response.build());
     responseObserver.onCompleted();
   }
 
   @Override
-  public void deletProduct(DeletProductRequest request, StreamObserver<DeletProductResponse> responseObserver) {
+  public void deletProduct(DeletProductRequest request, StreamObserver<DeletProductResponse> responseObserver)
+      throws IOException, SQLException {
     DeletProductResponse.Builder response = DeletProductResponse.newBuilder();
     int caller = request.getId();
     try (PreparedStatement preparedStatement = newConnection().prepareStatement("DELETE FROM products WHERE id = ?")) {
       preparedStatement.setLong(1, caller);
       preparedStatement.execute();
-      response.setMessage("Sucesso");
-    } catch (SQLException e) {
-      response.setMessage("Fail");
+      response.setMessage("Success");
     }
     responseObserver.onNext(response.build());
     responseObserver.onCompleted();
