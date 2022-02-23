@@ -17,7 +17,7 @@ import grpc.SaveProductRequest;
 import io.grpc.stub.StreamObserver;
 import model.Product;
 
-public class SaveProductService extends ProductGrpc.ProductImplBase {
+public class ProductService extends ProductGrpc.ProductImplBase {
 
   private final String URL = "jdbc:postgresql://localhost:5438/postgres";
   private final String USER = "postgres";
@@ -54,8 +54,7 @@ public class SaveProductService extends ProductGrpc.ProductImplBase {
   public void listProducts(FindProducts request, StreamObserver<ProductList> responseObserver) {
     ProductList.Builder response = ProductList.newBuilder();
     Product product = new Product();
-    try (PreparedStatement preparedStatement = newConnection().prepareStatement(
-        "SELECT * FROM products")) {
+    try (PreparedStatement preparedStatement = newConnection().prepareStatement("SELECT * FROM products")) {
       preparedStatement.execute();
       ResultSet resultSet = preparedStatement.getResultSet();
       while (resultSet.next()) {
@@ -74,10 +73,9 @@ public class SaveProductService extends ProductGrpc.ProductImplBase {
   @Override
   public void listProductById(FindProductById request, StreamObserver<ProductList> responseObserver) {
     ProductList.Builder response = ProductList.newBuilder();
-    int caller = (int) request.getId();
+    int caller = request.getId();
     Product product = new Product();
-    try (PreparedStatement preparedStatement = newConnection().prepareStatement(
-        "SELECT * FROM products WHERE id = ?")) {
+    try (PreparedStatement preparedStatement = newConnection().prepareStatement("SELECT * FROM products WHERE id = ?")) {
       preparedStatement.setLong(1, caller);
       preparedStatement.execute();
       ResultSet resultSet = preparedStatement.getResultSet();
@@ -96,9 +94,8 @@ public class SaveProductService extends ProductGrpc.ProductImplBase {
   @Override
   public void deletProduct(DeletProductRequest request, StreamObserver<DeletProductResponse> responseObserver) {
     DeletProductResponse.Builder response = DeletProductResponse.newBuilder();
-    int caller = (int) request.getId();
-    try (PreparedStatement preparedStatement = newConnection().prepareStatement(
-        "DELETE FROM products WHERE id = ?")) {
+    int caller = request.getId();
+    try (PreparedStatement preparedStatement = newConnection().prepareStatement("DELETE FROM products WHERE id = ?")) {
       preparedStatement.setLong(1, caller);
       preparedStatement.execute();
       response.setMessage("Sucesso");
