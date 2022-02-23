@@ -6,13 +6,9 @@ import io.grpc.ServerBuilder;
 import service.ProductService;
 
 public class Server {
-
-  public static void main(String[] args) throws InterruptedException, IOException, SQLException {
-    int port = 8082;
-    System.out.println("Iniciando o servidor gRPC na porta " + port);
-    io.grpc.Server server = ServerBuilder.forPort(port)
-        .addService(new SaveProductService())
-        .build();
+  public static void main(String[] args) throws InterruptedException, IOException {
+    int port =  Integer.parseInt(args[0]);
+    io.grpc.Server server = ServerBuilder.forPort(port).addService(new ProductService()).build();
     try {
       server.start();
       System.out.println("Servidor inicializado com sucesso na porta: " + port);
