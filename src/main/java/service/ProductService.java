@@ -1,5 +1,15 @@
 package service;
 
+import grpc.DeleteProductRequest;
+import grpc.DeleteProductResponse;
+import grpc.FindProductById;
+import grpc.FindProducts;
+import grpc.ProductGrpc;
+import grpc.SaveProductReply;
+import grpc.SaveProductRequest;
+import io.grpc.stub.StreamObserver;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -7,21 +17,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import grpc.DeletProductRequest;
-import grpc.DeletProductResponse;
-import grpc.FindProductById;
-import grpc.FindProducts;
-import grpc.ProductGrpc;
-import grpc.ProductList;
-import grpc.SaveProductReply;
-import grpc.SaveProductRequest;
-import io.grpc.stub.StreamObserver;
-import model.Product;
-
+/**
+ * This Class is responsible to execute database actions.
+ *
+ */
 public class ProductService extends ProductGrpc.ProductImplBase {
 
   private Connection newConnection() throws SQLException, IOException {
-    FileInputStream fileInputStream = new FileInputStream("connection.properties");
+    FileInputStream fileInputStream =
+        new FileInputStream("src/main/resources/connection.properties");
     Properties properties = new Properties();
     properties.load(fileInputStream);
     return DriverManager.getConnection(properties.getProperty("URL"),
@@ -30,7 +34,8 @@ public class ProductService extends ProductGrpc.ProductImplBase {
   }
 
   @Override
-  public void saveProduct(SaveProductRequest request, StreamObserver<SaveProductReply> responseObserver) {
+  public void saveProduct(SaveProductRequest request,
+                          StreamObserver<SaveProductReply> responseObserver) {
     SaveProductReply.Builder response = SaveProductReply.newBuilder();
     try (PreparedStatement preparedStatement = newConnection().prepareStatement(
         "INSERT INTO products (name, stock, price) VALUES (?, ?, ?)")) {
@@ -38,11 +43,11 @@ public class ProductService extends ProductGrpc.ProductImplBase {
       preparedStatement.setInt(2, (int) request.getStock());
       preparedStatement.setDouble(3, request.getPrice());
       preparedStatement.execute();
-      response.setMessage("Sucess");
-    } catch (Exception e) {
-      response.setMessage("Fail");
+      response.setMessage("The Product " + request.getName() + " was registered with success");
+      responseObserver.onNext(response.build());
+    } catch (SQLException | IOException e) {
+      responseObserver.onError(e);
     }
-    responseObserver.onNext(response.build());
     responseObserver.onCompleted();
   }
 
@@ -100,7 +105,9 @@ public class ProductService extends ProductGrpc.ProductImplBase {
         "DELETE FROM products WHERE id = ?")) {
       preparedStatement.setLong(1, request.getId());
       preparedStatement.execute();
-      response.setMessage("Success");
+      response.setMessage("The Product was deleted with success");
+    } catch (SQLException | IOException e) {
+      responseObserver.onError(e);
     }
     responseObserver.onNext(response.build());
     responseObserver.onCompleted();
