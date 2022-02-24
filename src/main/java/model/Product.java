@@ -2,10 +2,13 @@ package model;
 
 import java.util.Objects;
 
+/**
+ * Model Class to Products.
+ */
 public class Product {
 
   private long id;
-  private String nome;
+  private String name;
   private int stock;
   private double price;
 
@@ -16,15 +19,30 @@ public class Product {
     this.id = id;
   }
 
-  public Product(long id, String nome, int stock, double price) {
+  /**
+   * <p> Constructor with full params. </p>
+   *
+   * @param id identification the product.
+   * @param name  name of product.
+   * @param stock quantity in stock
+   * @param price price of product
+   */
+  public Product(long id, String name, int stock, double price) {
     this.id = id;
-    this.nome = nome;
+    this.name = name;
     this.stock = stock;
     this.price = price;
   }
 
-  public Product(String nome, int stock, double price) {
-    this.nome = nome;
+  /**
+   * <p>Constructor not use id.</p>
+   *
+   * @param name  name of product.
+   * @param stock quantity in stock
+   * @param price price of product
+   */
+  public Product(String name, int stock, double price) {
+    this.name = name;
     this.stock = stock;
     this.price = price;
   }
@@ -38,11 +56,11 @@ public class Product {
   }
 
   public String getNome() {
-    return nome;
+    return name;
   }
 
-  public void setNome(String nome) {
-    this.nome = nome;
+  public void setNome(String name) {
+    this.name = name;
   }
 
   public int getStock() {
@@ -70,22 +88,19 @@ public class Product {
       return false;
     }
     Product product = (Product) o;
-    return id == product.id && stock == product.stock && Double.compare(product.price, price) == 0 &&
-        Objects.equals(nome, product.nome);
+    return id == product.id && stock == product.stock
+        && Double.compare(product.price, price) == 0
+        && Objects.equals(name, product.name);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, nome, stock, price);
+    return Objects.hash(id, name, stock, price);
   }
 
   @Override
   public String toString() {
-    return "Product{" +
-        "id=" + id +
-        ", nome='" + nome + '\'' +
-        ", stock=" + stock +
-        ", price=" + price +
-        '}';
+    return "Product{" + "id=" + id + ", name='" + name + '\'' + ", stock=" + stock + ", price="
+        + price + '}';
   }
 }
