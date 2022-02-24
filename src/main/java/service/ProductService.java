@@ -32,15 +32,11 @@ public class ProductService extends ProductGrpc.ProductImplBase {
   @Override
   public void saveProduct(SaveProductRequest request, StreamObserver<SaveProductReply> responseObserver) {
     SaveProductReply.Builder response = SaveProductReply.newBuilder();
-    String caller2 = request.getName();
-    int caller3 = (int) request.getStock();
-    double caller4 = request.getPrice();
-
     try (PreparedStatement preparedStatement = newConnection().prepareStatement(
         "INSERT INTO products (name, stock, price) VALUES (?, ?, ?)")) {
-      preparedStatement.setString(1, caller2);
-      preparedStatement.setInt(2, caller3);
-      preparedStatement.setDouble(3, caller4);
+      preparedStatement.setString(1, request.getName());
+      preparedStatement.setInt(2, (int) request.getStock());
+      preparedStatement.setDouble(3, request.getPrice());
       preparedStatement.execute();
       response.setMessage("Sucess");
     } catch (Exception e) {
@@ -51,53 +47,58 @@ public class ProductService extends ProductGrpc.ProductImplBase {
   }
 
   @Override
-  public void listProducts(FindProducts request, StreamObserver<ProductList> responseObserver)
-      throws SQLException, IOException {
-    ProductList.Builder response = ProductList.newBuilder();
-    Product product = new Product();
-    try (PreparedStatement preparedStatement = newConnection().prepareStatement("SELECT * FROM products")) {
+  public void listProducts(FindProducts request,
+                           StreamObserver<grpc.ProductReply> responseObserver) {
+    grpc.ProductReply.Builder response = grpc.ProductReply.newBuilder();
+    try (PreparedStatement preparedStatement = newConnection().prepareStatement(
+        "SELECT * FROM products")) {
       preparedStatement.execute();
-      ResultSet resultSet = preparedStatement.getResultSet();
-      while (resultSet.next()) {
-        product.setId(resultSet.getInt("id"));
-        product.setNome(resultSet.getString("name"));
-        product.setStock(resultSet.getInt("stock"));
-        product.setPrice(resultSet.getDouble("price"));
-        System.out.println(product.getId() + " : " + product.getNome());
+      try (ResultSet resultSet = preparedStatement.getResultSet()) {
+        while (resultSet.next()) {
+          response.setId(resultSet.getInt("id"));
+          response.setName(resultSet.getString("name"));
+          response.setStock(resultSet.getInt("stock"));
+          response.setPrice(resultSet.getFloat("price"));
+          responseObserver.onNext(response.build());
+        }
       }
+    } catch (SQLException | IOException e) {
+      responseObserver.onError(e);
     }
-    responseObserver.onNext(response.build());
     responseObserver.onCompleted();
   }
 
   @Override
-  public void listProductById(FindProductById request, StreamObserver<ProductList> responseObserver)
-      throws SQLException, IOException {
-    ProductList.Builder response = ProductList.newBuilder();
-    int caller = request.getId();
-    Product product = new Product();
-    try (PreparedStatement preparedStatement = newConnection().prepareStatement("SELECT * FROM products WHERE id = ?")) {
-      preparedStatement.setLong(1, caller);
+  public void listProductById(FindProductById request,
+                              StreamObserver<grpc.ProductReply> responseObserver) {
+    grpc.ProductReply.Builder response = grpc.ProductReply.newBuilder();
+    try (
+        PreparedStatement preparedStatement = newConnection().prepareStatement(
+            "SELECT * FROM products WHERE id = ?")) {
+      preparedStatement.setLong(1, request.getId());
       preparedStatement.execute();
-      ResultSet resultSet = preparedStatement.getResultSet();
-      while (resultSet.next()) {
-        product.setId(resultSet.getInt("id"));
-        product.setNome(resultSet.getString("name"));
-        product.setStock(resultSet.getInt("stock"));
-        product.setPrice(resultSet.getDouble("price"));
+      try (ResultSet resultSet = preparedStatement.getResultSet()) {
+        while (resultSet.next()) {
+          response.setId(resultSet.getInt("id"));
+          response.setName(resultSet.getString("name"));
+          response.setStock(resultSet.getInt("stock"));
+          response.setPrice(resultSet.getFloat("price"));
+          responseObserver.onNext(response.build());
+        }
       }
+    } catch (SQLException | IOException e) {
+      responseObserver.onError(e);
     }
-    responseObserver.onNext(response.build());
     responseObserver.onCompleted();
   }
 
   @Override
-  public void deletProduct(DeletProductRequest request, StreamObserver<DeletProductResponse> responseObserver)
-      throws IOException, SQLException {
-    DeletProductResponse.Builder response = DeletProductResponse.newBuilder();
-    int caller = request.getId();
-    try (PreparedStatement preparedStatement = newConnection().prepareStatement("DELETE FROM products WHERE id = ?")) {
-      preparedStatement.setLong(1, caller);
+  public void deleteProduct(DeleteProductRequest request,
+                            StreamObserver<DeleteProductResponse> responseObserver) {
+    DeleteProductResponse.Builder response = DeleteProductResponse.newBuilder();
+    try (PreparedStatement preparedStatement = newConnection().prepareStatement(
+        "DELETE FROM products WHERE id = ?")) {
+      preparedStatement.setLong(1, request.getId());
       preparedStatement.execute();
       response.setMessage("Success");
     }
