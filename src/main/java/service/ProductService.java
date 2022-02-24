@@ -24,8 +24,8 @@ public class ProductService extends ProductGrpc.ProductImplBase {
     FileInputStream fileInputStream = new FileInputStream("connection.properties");
     Properties properties = new Properties();
     properties.load(fileInputStream);
-    Connection connection;
-    return  connection = DriverManager.getConnection(properties.getProperty("URL"), properties.getProperty("USER"),
+    return DriverManager.getConnection(properties.getProperty("URL"),
+        properties.getProperty("USER"),
         properties.getProperty("PASSWORD"));
   }
 
