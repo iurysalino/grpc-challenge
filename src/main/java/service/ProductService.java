@@ -4,6 +4,8 @@ import grpc.CreateShoppingCartReply;
 import grpc.CreateShoppingCartRequest;
 import grpc.DeleteProductRequest;
 import grpc.DeleteProductResponse;
+import grpc.FinalizeSaleReply;
+import grpc.FinalizeSaleRequest;
 import grpc.FindProductById;
 import grpc.FindProducts;
 import grpc.InsertProductInTheShoppingCartReply;
@@ -145,6 +147,31 @@ public class ProductService extends ProductGrpc.ProductImplBase {
       preparedStatement.execute();
       response.setMessage(request.getQuantity() + " new products added in you shopping cart");
       responseObserver.onNext(response.build());
+    } catch (SQLException | IOException e) {
+      responseObserver.onError(e);
+    }
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void finalizeSale(FinalizeSaleRequest request,
+                           StreamObserver<FinalizeSaleReply> responseObserver) {
+    FinalizeSaleReply.Builder response = FinalizeSaleReply.newBuilder();
+    try (PreparedStatement preparedStatement = newConnection().prepareStatement(
+        "SELECT sum_products FROM "
+            + "((SELECT SUM((quantity) * p.price) AS produtos_somados "
+            + "FROM products_shopping_cart psc, products p, shopping_cart sc "
+            + "WHERE p.id = psc.id_product "
+            + "AND psc.id_shopping_cart = sc.id "
+            + "AND sc.id_client = ?)) AS TOTAL_SALE")) {
+      preparedStatement.setInt(1, request.getIdClient());
+      preparedStatement.execute();
+      try (ResultSet resultSet = preparedStatement.getResultSet()) {
+        while (resultSet.next()) {
+          response.setMessage(String.valueOf(resultSet.getDouble("sum_products")));
+          responseObserver.onNext(response.build());
+        }
+      }
     } catch (SQLException | IOException e) {
       responseObserver.onError(e);
     }
