@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+option java_package = "grpc";
+option java_outer_classname = "ProductProto";
+
+service Product {rpc SaveProduct (SaveProductRequest) returns (SaveProductReply) {}
+  rpc ListProductById (FindProductById) returns (ProductReply) {}
+  rpc ListProducts (FindProducts) returns (stream ProductReply){}
+  rpc DeleteProduct (DeleteProductRequest) returns (DeleteProductResponse){}}
+
+message SaveProductRequest{int64 id = 1;
+  string name = 2;
+  int64 stock = 3;
+  float price = 4;}
+
+message SaveProductReply{string message = 1;}
+
+message FindProductById{int32 id = 1;}
+
+message FindProducts{}
+
+message ProductReply{int64 id = 1;
+  string name = 2;
+  int64 stock = 3;
+  float price = 4;}
+
+message DeleteProductRequest{int32 id = 1;}
+
+message DeleteProductResponse{string message = 1;}

@@ -1,0 +1,8 @@
+# Default ignored files
+.idea/
+# Datasource local storage ignored files
+/dataSources/
+/target/
+dependency-reduced-pom.xml
+grpc-challenge.iml
+/src/main/resources/connection.properties
