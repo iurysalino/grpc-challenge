@@ -13,6 +13,7 @@ service Product {
   rpc CreateShoppingCart (CreateShoppingCartRequest) returns (CreateShoppingCartReply){}
   rpc InsertProductInTheShoppingCart (InsertProductInTheShoppingCartRequest) returns (InsertProductInTheShoppingCartReply){}
   rpc RemoveProductShoppingCart (RemoveProductShoppingCartRequest) returns (RemoveProductShoppingCartReply){}
+  rpc FinalizeSale (FinalizeSaleRequest) returns (FinalizeSaleReply){}
 }
 
 message SaveProductRequest{int64 id = 1;
@@ -62,5 +63,13 @@ message RemoveProductShoppingCartRequest{
 }
 
 message RemoveProductShoppingCartReply{
+  string message = 1;
+}
+
+message FinalizeSaleRequest{
+  int32 id_client = 1;
+}
+
+message FinalizeSaleReply{
   string message = 1;
 }
