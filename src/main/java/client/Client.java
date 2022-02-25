@@ -7,6 +7,8 @@ import grpc.CreateShoppingCartReply;
 import grpc.CreateShoppingCartRequest;
 import grpc.DeleteProductRequest;
 import grpc.DeleteProductResponse;
+import grpc.FinalizeSaleReply;
+import grpc.FinalizeSaleRequest;
 import grpc.InsertProductInTheShoppingCartReply;
 import grpc.InsertProductInTheShoppingCartRequest;
 import grpc.ProductReply;
@@ -128,6 +130,19 @@ public class Client {
           InsertProductInTheShoppingCartReply insertProductInTheShoppingCartReply =
               stub.insertProductInTheShoppingCart(insertProductInTheShoppingCartRequest);
           System.out.println(insertProductInTheShoppingCartReply.getMessage());
+          break;
+        case 9:
+          Scanner scannerToDigitIdClientToFinalizeSale = new Scanner(System.in);
+          System.out.println("Digit the Client ID: ");
+          int idClientFinalizeSale =
+              Integer.parseInt(scannerToDigitIdClientToFinalizeSale.nextLine());
+          FinalizeSaleRequest finalizeSaleRequest = FinalizeSaleRequest
+              .newBuilder()
+              .setIdClient(idClientFinalizeSale)
+              .build();
+          FinalizeSaleReply finalizeSaleReply = stub.finalizeSale(finalizeSaleRequest);
+          float totalSale = Float.parseFloat(finalizeSaleReply.getMessage());
+          System.out.printf("Total Value of You Cart Is: %.2f $ \n", totalSale);
           break;
         default:
           System.out.println("Inform a menu option valid!");
