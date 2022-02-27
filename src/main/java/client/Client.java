@@ -3,8 +3,14 @@ package client;
 import static grpc.ProductGrpc.ProductBlockingStub;
 import static grpc.ProductGrpc.newBlockingStub;
 
+import grpc.CreateShoppingCartReply;
+import grpc.CreateShoppingCartRequest;
 import grpc.DeleteProductRequest;
 import grpc.DeleteProductResponse;
+import grpc.FinalizeSaleReply;
+import grpc.FinalizeSaleRequest;
+import grpc.InsertProductInTheShoppingCartReply;
+import grpc.InsertProductInTheShoppingCartRequest;
 import grpc.ProductReply;
 import grpc.SaveProductReply;
 import io.grpc.ManagedChannel;
@@ -19,6 +25,7 @@ public class Client {
   /**
    * Main method to start and execute menu operations.
    */
+  @SuppressWarnings("checkstyle:LineLength")
   public static void main(String[] args) {
     ManagedChannel managedChannel =
         ManagedChannelBuilder.forAddress(args[0], Integer.parseInt(args[1])).usePlaintext().build();
@@ -30,18 +37,22 @@ public class Client {
       System.out.println("*          Welcome to CHALLENGE 3               *");
       System.out.println("*************************************************");
       System.out.println("*             1) Insert Product                 *");
-      System.out.println("*             2) Import Products                *");
-      System.out.println("*             3) Export Products                *");
-      System.out.println("*             4) List All Products              *");
-      System.out.println("*             5) Find Product By ID             *");
-      System.out.println("*             6) Delete Product                 *");
-      System.out.println("*             7) Add Product Shopping Cart      *");
-      System.out.println("*             8) Finalize Sale                  *");
+      System.out.println("*             2) List All Products              *");
+      System.out.println("*             3) Find Product By ID             *");
+      System.out.println("*             4) Delete Product                 *");
+      System.out.println("*             5) Create Shopping Cart           *");
+      System.out.println("*             6) Add Product Shopping Cart      *");
+      System.out.println("*             7) Import Products                *");
+      System.out.println("*             8) Export Products                *");
+      System.out.println("*             9) Finalize Sale                  *");
       System.out.println("*             0) Exit                           *");
       System.out.println("*************************************************");
       Scanner scanner = new Scanner(System.in);
       menuOption = Integer.parseInt(scanner.nextLine());
       switch (menuOption) {
+        case 0:
+          System.out.println("See You Latter!");
+          break;
         case 1:
           Scanner scannerToDigitInformationAboutSaveProduct = new Scanner(System.in);
           System.out.println("Digit the Product Name: ");
@@ -89,8 +100,49 @@ public class Client {
           DeleteProductResponse deleteProductResponse = stub.deleteProduct(deleteProductRequest);
           System.out.println(deleteProductResponse.getMessage());
           break;
-        case 0:
-          System.out.println("See You Latter!");
+        case 5:
+          Scanner scannerToDigitIdClientToCreateShoppingCart = new Scanner(System.in);
+          System.out.println("Digit the Client ID: ");
+          int idClient = Integer.parseInt(scannerToDigitIdClientToCreateShoppingCart.nextLine());
+          CreateShoppingCartRequest createShoppingCartRequest = CreateShoppingCartRequest
+              .newBuilder()
+              .setId(idClient)
+              .build();
+          CreateShoppingCartReply createShoppingCartReply =
+              stub.createShoppingCart(createShoppingCartRequest);
+          System.out.println(createShoppingCartReply.getMessage());
+          break;
+        case 6:
+          Scanner scannerToAddProductInToShoppingCart = new Scanner(System.in);
+          System.out.println("Digit the Shopping Cart ID: ");
+          int idShoppingCart = Integer.parseInt(scannerToAddProductInToShoppingCart.nextLine());
+          System.out.println("Digit the Product ID: ");
+          int idProduct = Integer.parseInt(scannerToAddProductInToShoppingCart.nextLine());
+          System.out.println("Digit the Quantity of Products you add: ");
+          int quantityOfProducts = Integer.parseInt(scannerToAddProductInToShoppingCart.nextLine());
+          InsertProductInTheShoppingCartRequest insertProductInTheShoppingCartRequest =
+              InsertProductInTheShoppingCartRequest
+              .newBuilder()
+              .setIdShoppingCart(idShoppingCart)
+              .setIdProduct(idProduct)
+              .setQuantity(quantityOfProducts)
+              .build();
+          InsertProductInTheShoppingCartReply insertProductInTheShoppingCartReply =
+              stub.insertProductInTheShoppingCart(insertProductInTheShoppingCartRequest);
+          System.out.println(insertProductInTheShoppingCartReply.getMessage());
+          break;
+        case 9:
+          Scanner scannerToDigitIdClientToFinalizeSale = new Scanner(System.in);
+          System.out.println("Digit the Client ID: ");
+          int idClientFinalizeSale =
+              Integer.parseInt(scannerToDigitIdClientToFinalizeSale.nextLine());
+          FinalizeSaleRequest finalizeSaleRequest = FinalizeSaleRequest
+              .newBuilder()
+              .setIdClient(idClientFinalizeSale)
+              .build();
+          FinalizeSaleReply finalizeSaleReply = stub.finalizeSale(finalizeSaleRequest);
+          float totalSale = Float.parseFloat(finalizeSaleReply.getMessage());
+          System.out.printf("Total Value of You Cart Is: %.2f $ \n", totalSale);
           break;
         default:
           System.out.println("Inform a menu option valid!");
