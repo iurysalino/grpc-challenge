@@ -7,3 +7,4 @@ dependency-reduced-pom.xml
 grpc-challenge.iml
 /src/main/resources/connection.properties
 /src/main/resources/products.json
+/src/main/resources/products-exported.json
