@@ -201,7 +201,7 @@ public class ProductService extends ProductGrpc.ProductImplBase {
     FinalizeSaleReply.Builder response = FinalizeSaleReply.newBuilder();
     try (PreparedStatement preparedStatement = newConnection().prepareStatement(
         "SELECT sum_products FROM "
-            + "((SELECT SUM((quantity) * p.price) AS produtos_somados "
+            + "((SELECT SUM((quantity) * p.price) AS sum_products "
             + "FROM products_shopping_cart psc, products p, shopping_cart sc "
             + "WHERE p.id = psc.id_product "
             + "AND psc.id_shopping_cart = sc.id "
