@@ -3,10 +3,14 @@ package client;
 import static grpc.ProductGrpc.ProductBlockingStub;
 import static grpc.ProductGrpc.newBlockingStub;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import grpc.CreateShoppingCartReply;
 import grpc.CreateShoppingCartRequest;
 import grpc.DeleteProductRequest;
 import grpc.DeleteProductResponse;
+import grpc.ExportFileReply;
+import grpc.ExportFileRequest;
 import grpc.FinalizeSaleReply;
 import grpc.FinalizeSaleRequest;
 import grpc.InsertProductInTheShoppingCartReply;
@@ -15,8 +19,16 @@ import grpc.ProductReply;
 import grpc.SaveProductReply;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.Scanner;
+import org.json.simple.JSONArray;
 
 /**
  * Client class simulation.
@@ -25,11 +37,19 @@ public class Client {
   /**
    * Main method to start and execute menu operations.
    */
-  @SuppressWarnings("checkstyle:LineLength")
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     ManagedChannel managedChannel =
         ManagedChannelBuilder.forAddress(args[0], Integer.parseInt(args[1])).usePlaintext().build();
     ProductBlockingStub stub = newBlockingStub(managedChannel);
+    Properties properties = new Properties();
+    FileInputStream fileInputStream;
+    try {
+      fileInputStream = new FileInputStream("src/main/resources/connection.properties");
+      properties.load(fileInputStream);
+    } catch (IOException e) {
+      System.out.println("Error: " + e.getMessage());
+    }
+
 
     int menuOption;
     do {
@@ -42,17 +62,19 @@ public class Client {
       System.out.println("*             4) Delete Product                 *");
       System.out.println("*             5) Create Shopping Cart           *");
       System.out.println("*             6) Add Product Shopping Cart      *");
-      System.out.println("*             7) Import Products                *");
-      System.out.println("*             8) Export Products                *");
+      System.out.println("*             7) Export Products                *");
+      System.out.println("*             8) Import Products                *");
       System.out.println("*             9) Finalize Sale                  *");
       System.out.println("*             0) Exit                           *");
       System.out.println("*************************************************");
       Scanner scanner = new Scanner(System.in);
       menuOption = Integer.parseInt(scanner.nextLine());
       switch (menuOption) {
+
         case 0:
           System.out.println("See You Latter!");
           break;
+
         case 1:
           Scanner scannerToDigitInformationAboutSaveProduct = new Scanner(System.in);
           System.out.println("Digit the Product Name: ");
@@ -64,20 +86,18 @@ public class Client {
               Float.parseFloat(scannerToDigitInformationAboutSaveProduct.nextLine());
           grpc.SaveProductRequest saveProduct =
               grpc.SaveProductRequest.newBuilder().setName(productName).setStock(productStock)
-                  .setPrice(productPrice)
-                  .build();
+                  .setPrice(productPrice).build();
           SaveProductReply saveProductReply = stub.saveProduct(saveProduct);
           System.out.println(saveProductReply.getMessage());
           break;
+
         case 2:
           grpc.FindProducts findProducts = grpc.FindProducts.newBuilder().build();
           Iterator<ProductReply> productReplyIterator = stub.listProducts(findProducts);
           while (productReplyIterator.hasNext()) {
             ProductReply productReply = productReplyIterator.next();
-            System.out.println(
-                productReply.getId() + " " + productReply.getName() + " "
-                    + productReply.getStock() + " "
-                    + productReply.getPrice());
+            System.out.println(productReply.getId() + " " + productReply.getName() + " "
+                + productReply.getStock() + " " + productReply.getPrice());
           }
           break;
         case 3:
@@ -91,6 +111,7 @@ public class Client {
               productReply.getId() + " " + productReply.getName() + " " + productReply.getStock()
                   + " " + productReply.getPrice());
           break;
+
         case 4:
           Scanner scannerToDigitIdAboutDeleteProduct = new Scanner(System.in);
           System.out.println("Digit the Product ID: ");
@@ -104,14 +125,13 @@ public class Client {
           Scanner scannerToDigitIdClientToCreateShoppingCart = new Scanner(System.in);
           System.out.println("Digit the Client ID: ");
           int idClient = Integer.parseInt(scannerToDigitIdClientToCreateShoppingCart.nextLine());
-          CreateShoppingCartRequest createShoppingCartRequest = CreateShoppingCartRequest
-              .newBuilder()
-              .setId(idClient)
-              .build();
+          CreateShoppingCartRequest createShoppingCartRequest =
+              CreateShoppingCartRequest.newBuilder().setId(idClient).build();
           CreateShoppingCartReply createShoppingCartReply =
               stub.createShoppingCart(createShoppingCartRequest);
           System.out.println(createShoppingCartReply.getMessage());
           break;
+
         case 6:
           Scanner scannerToAddProductInToShoppingCart = new Scanner(System.in);
           System.out.println("Digit the Shopping Cart ID: ");
@@ -121,25 +141,75 @@ public class Client {
           System.out.println("Digit the Quantity of Products you add: ");
           int quantityOfProducts = Integer.parseInt(scannerToAddProductInToShoppingCart.nextLine());
           InsertProductInTheShoppingCartRequest insertProductInTheShoppingCartRequest =
-              InsertProductInTheShoppingCartRequest
-              .newBuilder()
-              .setIdShoppingCart(idShoppingCart)
-              .setIdProduct(idProduct)
-              .setQuantity(quantityOfProducts)
-              .build();
+              InsertProductInTheShoppingCartRequest.newBuilder().setIdShoppingCart(idShoppingCart)
+                  .setIdProduct(idProduct).setQuantity(quantityOfProducts).build();
           InsertProductInTheShoppingCartReply insertProductInTheShoppingCartReply =
               stub.insertProductInTheShoppingCart(insertProductInTheShoppingCartRequest);
           System.out.println(insertProductInTheShoppingCartReply.getMessage());
+          break;
+
+        case 7:
+          System.out.println("*************************************************");
+          System.out.println("*          Sub Menu Export Procts               *");
+          System.out.println("*       Digit a option to file export:          *");
+          System.out.println("*************************************************");
+          System.out.println("*             1) JSON                           *");
+          System.out.println("*             2) Parquet                        *");
+          System.out.println("*************************************************");
+          int subMenuOption;
+          Scanner scannerSubmenu = new Scanner(System.in);
+          subMenuOption = Integer.parseInt(scannerSubmenu.nextLine());
+          switch (subMenuOption) {
+            case 1:
+              FileWriter fileWriter;
+              ExportFileRequest exportFileRequest = ExportFileRequest.newBuilder()
+                  .setFileName(properties.getProperty("PATH_JSON_FILE_WRITER")).build();
+              Iterator<ExportFileReply> exportFileReplyIterator =
+                  stub.exportProductsToJsonFile(exportFileRequest);
+              while (exportFileReplyIterator.hasNext()) {
+                ExportFileReply exportFileReply = exportFileReplyIterator.next();
+                System.out.println(exportFileReply.getData());
+                System.out.println(exportFileReply.getSize());
+                fileWriter = new FileWriter(properties.getProperty("PATH_JSON_FILE_WRITER"));
+                //converter um ByteString para um JsonObject
+                fileWriter.write(exportFileReply.getData());
+                fileWriter.flush();
+                fileWriter.close();
+              }
+              break;
+            case 2:
+              System.out.println("Export para Parquet");
+              break;
+            default:
+              System.out.println("Inform a menu option valid!");
+          }
+          break;
+        case 8:
+          // create a reader
+          Reader reader =
+              Files.newBufferedReader(Paths.get(properties.getProperty("PATH_JSON_FILE_READER")));
+          //create ObjectMapper instance
+          ObjectMapper objectMapper = new ObjectMapper();
+          //read customer.json file into tree model
+          JsonNode parser = objectMapper.readTree(reader);
+          JSONArray jsonArray = new JSONArray();
+          for (JsonNode pm : parser.path("products")) {
+            jsonArray.add(pm);
+          }
+          System.out.println(jsonArray.toJSONString());
+          //close reader
+          reader.close();
           break;
         case 9:
           Scanner scannerToDigitIdClientToFinalizeSale = new Scanner(System.in);
           System.out.println("Digit the Client ID: ");
           int idClientFinalizeSale =
               Integer.parseInt(scannerToDigitIdClientToFinalizeSale.nextLine());
-          FinalizeSaleRequest finalizeSaleRequest = FinalizeSaleRequest
-              .newBuilder()
-              .setIdClient(idClientFinalizeSale)
-              .build();
+          FinalizeSaleRequest finalizeSaleRequest =
+              FinalizeSaleRequest
+                  .newBuilder()
+                  .setIdClient(idClientFinalizeSale)
+                  .build();
           FinalizeSaleReply finalizeSaleReply = stub.finalizeSale(finalizeSaleRequest);
           float totalSale = Float.parseFloat(finalizeSaleReply.getMessage());
           System.out.printf("Total Value of You Cart Is: %.2f $ \n", totalSale);
