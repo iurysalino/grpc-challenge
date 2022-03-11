@@ -171,7 +171,6 @@ public class Client {
                 System.out.println(exportFileReply.getData());
                 System.out.println(exportFileReply.getSize());
                 fileWriter = new FileWriter(properties.getProperty("PATH_JSON_FILE_WRITER"));
-                //converter um ByteString para um JsonObject
                 fileWriter.write(exportFileReply.getData());
                 fileWriter.flush();
                 fileWriter.close();
