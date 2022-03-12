@@ -28,7 +28,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Scanner;
-import org.json.simple.JSONArray;
+import model.Product;
 
 /**
  * Client class simulation.
@@ -191,11 +191,23 @@ public class Client {
           ObjectMapper objectMapper = new ObjectMapper();
           //read customer.json file into tree model
           JsonNode parser = objectMapper.readTree(reader);
-          JSONArray jsonArray = new JSONArray();
           for (JsonNode pm : parser.path("products")) {
-            jsonArray.add(pm);
+            Product product = new Product();
+            product.setName((pm.path("name").asText()));
+            product.setStock(Integer.parseInt(String.valueOf(pm.path("stock"))));
+            product.setPrice(Double.parseDouble(String.valueOf(pm.path("price"))));
+            // save product
+            grpc.SaveProductRequest saveProductJsonFileInDataBase =
+                grpc.SaveProductRequest
+                    .newBuilder()
+                    .setName(product.getName())
+                    .setStock(product.getStock())
+                    .setPrice((float) product.getPrice())
+                    .build();
+            SaveProductReply saveJsonFileInDataBaseReply = stub
+                .saveProduct(saveProductJsonFileInDataBase);
+            System.out.println(saveJsonFileInDataBaseReply.getMessage());
           }
-          System.out.println(jsonArray.toJSONString());
           //close reader
           reader.close();
           break;
