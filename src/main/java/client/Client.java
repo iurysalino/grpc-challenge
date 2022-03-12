@@ -184,32 +184,52 @@ public class Client {
           }
           break;
         case 8:
-          // create a reader
-          Reader reader =
-              Files.newBufferedReader(Paths.get(properties.getProperty("PATH_JSON_FILE_READER")));
-          //create ObjectMapper instance
-          ObjectMapper objectMapper = new ObjectMapper();
-          //read customer.json file into tree model
-          JsonNode parser = objectMapper.readTree(reader);
-          for (JsonNode pm : parser.path("products")) {
-            Product product = new Product();
-            product.setName((pm.path("name").asText()));
-            product.setStock(Integer.parseInt(String.valueOf(pm.path("stock"))));
-            product.setPrice(Double.parseDouble(String.valueOf(pm.path("price"))));
-            // save product
-            grpc.SaveProductRequest saveProductJsonFileInDataBase =
-                grpc.SaveProductRequest
-                    .newBuilder()
-                    .setName(product.getName())
-                    .setStock(product.getStock())
-                    .setPrice((float) product.getPrice())
-                    .build();
-            SaveProductReply saveJsonFileInDataBaseReply = stub
-                .saveProduct(saveProductJsonFileInDataBase);
-            System.out.println(saveJsonFileInDataBaseReply.getMessage());
+          System.out.println("*************************************************");
+          System.out.println("*          Sub Menu Import Products             *");
+          System.out.println("*       Digit a option to file export:          *");
+          System.out.println("*************************************************");
+          System.out.println("*             1) JSON                           *");
+          System.out.println("*             2) Parquet                        *");
+          System.out.println("*************************************************");
+          int subMenuReadFileOption;
+          Scanner scannerSubmenuReadFile = new Scanner(System.in);
+          subMenuReadFileOption = Integer.parseInt(scannerSubmenuReadFile.nextLine());
+          switch (subMenuReadFileOption) {
+            case 1:
+              // create a reader
+              Reader reader =
+                  Files.newBufferedReader(Paths
+                      .get(properties.getProperty("PATH_JSON_FILE_READER")));
+              //create ObjectMapper instance
+              ObjectMapper objectMapper = new ObjectMapper();
+              //read customer.json file into tree model
+              JsonNode parser = objectMapper.readTree(reader);
+              for (JsonNode pm : parser.path("products")) {
+                Product product = new Product();
+                product.setName((pm.path("name").asText()));
+                product.setStock(Integer.parseInt(String.valueOf(pm.path("stock"))));
+                product.setPrice(Double.parseDouble(String.valueOf(pm.path("price"))));
+                // save product
+                grpc.SaveProductRequest saveProductJsonFileInDataBase =
+                    grpc.SaveProductRequest
+                        .newBuilder()
+                        .setName(product.getName())
+                        .setStock(product.getStock())
+                        .setPrice((float) product.getPrice())
+                        .build();
+                SaveProductReply saveJsonFileInDataBaseReply = stub
+                    .saveProduct(saveProductJsonFileInDataBase);
+                System.out.println(saveJsonFileInDataBaseReply.getMessage());
+              }
+              //close reader
+              reader.close();
+              break;
+            case 2:
+              System.out.println("Import to Parquet");
+              break;
+            default:
+              System.out.println("Inform a menu option valid!");
           }
-          //close reader
-          reader.close();
           break;
         case 9:
           Scanner scannerToDigitIdClientToFinalizeSale = new Scanner(System.in);
