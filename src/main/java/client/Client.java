@@ -13,6 +13,7 @@ import grpc.ExportFileReply;
 import grpc.ExportFileRequest;
 import grpc.FinalizeSaleReply;
 import grpc.FinalizeSaleRequest;
+import grpc.FindProducts;
 import grpc.InsertProductInTheShoppingCartReply;
 import grpc.InsertProductInTheShoppingCartRequest;
 import grpc.ProductReply;
@@ -25,7 +26,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 import model.Product;
@@ -50,7 +53,6 @@ public class Client {
       System.out.println("Error: " + e.getMessage());
     }
 
-
     int menuOption;
     do {
       System.out.println("*************************************************");
@@ -70,11 +72,9 @@ public class Client {
       Scanner scanner = new Scanner(System.in);
       menuOption = Integer.parseInt(scanner.nextLine());
       switch (menuOption) {
-
         case 0:
           System.out.println("See You Latter!");
           break;
-
         case 1:
           Scanner scannerToDigitInformationAboutSaveProduct = new Scanner(System.in);
           System.out.println("Digit the Product Name: ");
@@ -90,9 +90,8 @@ public class Client {
           SaveProductReply saveProductReply = stub.saveProduct(saveProduct);
           System.out.println(saveProductReply.getMessage());
           break;
-
         case 2:
-          grpc.FindProducts findProducts = grpc.FindProducts.newBuilder().build();
+          FindProducts findProducts = FindProducts.newBuilder().build();
           Iterator<ProductReply> productReplyIterator = stub.listProducts(findProducts);
           while (productReplyIterator.hasNext()) {
             ProductReply productReply = productReplyIterator.next();
@@ -111,7 +110,6 @@ public class Client {
               productReply.getId() + " " + productReply.getName() + " " + productReply.getStock()
                   + " " + productReply.getPrice());
           break;
-
         case 4:
           Scanner scannerToDigitIdAboutDeleteProduct = new Scanner(System.in);
           System.out.println("Digit the Product ID: ");
@@ -131,7 +129,6 @@ public class Client {
               stub.createShoppingCart(createShoppingCartRequest);
           System.out.println(createShoppingCartReply.getMessage());
           break;
-
         case 6:
           Scanner scannerToAddProductInToShoppingCart = new Scanner(System.in);
           System.out.println("Digit the Shopping Cart ID: ");
@@ -147,7 +144,6 @@ public class Client {
               stub.insertProductInTheShoppingCart(insertProductInTheShoppingCartRequest);
           System.out.println(insertProductInTheShoppingCartReply.getMessage());
           break;
-
         case 7:
           System.out.println("*************************************************");
           System.out.println("*          Sub Menu Export Procts               *");
@@ -177,7 +173,20 @@ public class Client {
               }
               break;
             case 2:
-              System.out.println("Export para Parquet");
+              FindProducts findProductsToExportParquetFile = FindProducts.newBuilder().build();
+              Iterator<ProductReply> iteratorToExportParquetFile =
+                  stub.listProducts(findProductsToExportParquetFile);
+              List<List<String>> dataOrganizerParquetFileFormat = new ArrayList<>();
+              while (iteratorToExportParquetFile.hasNext()) {
+                ProductReply productReplyToExportParquetFile = iteratorToExportParquetFile.next();
+                List<String> parquetFileIten = new ArrayList<>();
+                parquetFileIten.add(String.valueOf(productReplyToExportParquetFile.getId()));
+                parquetFileIten.add(productReplyToExportParquetFile.getName());
+                parquetFileIten.add(String.valueOf(productReplyToExportParquetFile.getStock()));
+                parquetFileIten.add(String.valueOf(productReplyToExportParquetFile.getPrice()));
+                dataOrganizerParquetFileFormat.add(parquetFileIten);
+              }
+              System.out.println(dataOrganizerParquetFileFormat);
               break;
             default:
               System.out.println("Inform a menu option valid!");

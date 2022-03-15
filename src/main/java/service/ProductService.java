@@ -1,5 +1,24 @@
 package service;
 
+import grpc.CreateShoppingCartReply;
+import grpc.CreateShoppingCartRequest;
+import grpc.DeleteProductRequest;
+import grpc.DeleteProductResponse;
+import grpc.ExportFileReply;
+import grpc.ExportFileRequest;
+import grpc.ExportParquetFileReply;
+import grpc.FinalizeSaleReply;
+import grpc.FinalizeSaleRequest;
+import grpc.FindProductById;
+import grpc.FindProducts;
+import grpc.InsertProductInTheShoppingCartReply;
+import grpc.InsertProductInTheShoppingCartRequest;
+import grpc.ProductGrpc;
+import grpc.ProductReply;
+import grpc.ProductReply.Builder;
+import grpc.SaveProductReply;
+import grpc.SaveProductRequest;
+import io.grpc.stub.StreamObserver;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
@@ -10,26 +29,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
-import grpc.CreateShoppingCartReply;
-import grpc.CreateShoppingCartRequest;
-import grpc.DeleteProductRequest;
-import grpc.DeleteProductResponse;
-import grpc.ExportFileReply;
-import grpc.ExportFileRequest;
-import grpc.FinalizeSaleReply;
-import grpc.FinalizeSaleRequest;
-import grpc.FindProductById;
-import grpc.FindProducts;
-import grpc.InsertProductInTheShoppingCartReply;
-import grpc.InsertProductInTheShoppingCartRequest;
-import grpc.ProductGrpc;
-import grpc.SaveProductReply;
-import grpc.SaveProductRequest;
-import io.grpc.stub.StreamObserver;
 
 /**
  * This Class is responsible to execute database actions.
@@ -65,8 +66,8 @@ public class ProductService extends ProductGrpc.ProductImplBase {
 
   @Override
   public void listProducts(FindProducts request,
-                           StreamObserver<grpc.ProductReply> responseObserver) {
-    grpc.ProductReply.Builder response = grpc.ProductReply.newBuilder();
+                           StreamObserver<ProductReply> responseObserver) {
+    Builder response = ProductReply.newBuilder();
     try (PreparedStatement preparedStatement = newConnection().prepareStatement(
         "SELECT * FROM products")) {
       preparedStatement.execute();
@@ -116,13 +117,30 @@ public class ProductService extends ProductGrpc.ProductImplBase {
 
   @Override
   public void exportProductsToParquetFile(ExportFileRequest request,
-                                          StreamObserver<ExportFileReply> responseObserver) {
+                                          StreamObserver<ExportParquetFileReply> responseObserver) {
+    ExportParquetFileReply.Builder response = ExportParquetFileReply.newBuilder();
+    try (PreparedStatement preparedStatement = newConnection().prepareStatement(
+        "SELECT * FROM products")) {
+      preparedStatement.execute();
+      try (ResultSet resultSet = preparedStatement.getResultSet()) {
+        while (resultSet.next()) {
+          response.setId(resultSet.getInt("id"));
+          response.setName(resultSet.getString("name"));
+          response.setStock(resultSet.getInt("stock"));
+          response.setPrice(resultSet.getFloat("price"));
+          responseObserver.onNext(response.build());
+        }
+      }
+    } catch (SQLException | IOException e) {
+      responseObserver.onError(e);
+    }
+    responseObserver.onCompleted();
   }
 
   @Override
   public void listProductById(FindProductById request,
-                              StreamObserver<grpc.ProductReply> responseObserver) {
-    grpc.ProductReply.Builder response = grpc.ProductReply.newBuilder();
+                              StreamObserver<ProductReply> responseObserver) {
+    ProductReply.Builder response = ProductReply.newBuilder();
     try (PreparedStatement preparedStatement = newConnection().prepareStatement(
         "SELECT * FROM products WHERE id = ?")) {
       preparedStatement.setLong(1, request.getId());
