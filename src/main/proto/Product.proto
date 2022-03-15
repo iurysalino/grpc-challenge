@@ -14,6 +14,8 @@ service Product {
   rpc InsertProductInTheShoppingCart (InsertProductInTheShoppingCartRequest) returns (InsertProductInTheShoppingCartReply){}
   rpc RemoveProductShoppingCart (RemoveProductShoppingCartRequest) returns (RemoveProductShoppingCartReply){}
   rpc FinalizeSale (FinalizeSaleRequest) returns (FinalizeSaleReply){}
+  rpc ExportProductsToJsonFile (ExportFileRequest) returns (stream ExportFileReply){}
+  rpc ExportProductsToParquetFile (ExportFileRequest) returns (stream ExportFileReply){}
 }
 
 message SaveProductRequest{int64 id = 1;
@@ -27,10 +29,18 @@ message FindProductById{int32 id = 1;}
 
 message FindProducts{}
 
-message ProductReply{int64 id = 1;
+message ProductReply{
+  int64 id = 1;
   string name = 2;
   int64 stock = 3;
   float price = 4;}
+
+message ExportFileRequest{string fileName = 1;}
+
+message ExportFileReply{
+  string data = 1;
+  int32 size = 2;
+}
 
 message DeleteProductRequest{int32 id = 1;}
 

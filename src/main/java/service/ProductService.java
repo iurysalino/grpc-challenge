@@ -1,9 +1,25 @@
 package service;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import grpc.CreateShoppingCartReply;
 import grpc.CreateShoppingCartRequest;
 import grpc.DeleteProductRequest;
 import grpc.DeleteProductResponse;
+import grpc.ExportFileReply;
+import grpc.ExportFileRequest;
 import grpc.FinalizeSaleReply;
 import grpc.FinalizeSaleRequest;
 import grpc.FindProductById;
@@ -14,14 +30,6 @@ import grpc.ProductGrpc;
 import grpc.SaveProductReply;
 import grpc.SaveProductRequest;
 import io.grpc.stub.StreamObserver;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Properties;
 
 /**
  * This Class is responsible to execute database actions.
@@ -75,6 +83,40 @@ public class ProductService extends ProductGrpc.ProductImplBase {
       responseObserver.onError(e);
     }
     responseObserver.onCompleted();
+  }
+
+  @Override
+  public void exportProductsToJsonFile(ExportFileRequest request,
+                                       StreamObserver<ExportFileReply> responseObserver) {
+    ExportFileReply.Builder response = ExportFileReply.newBuilder();
+    try (PreparedStatement preparedStatement = newConnection().prepareStatement(
+        "SELECT * FROM products")) {
+      preparedStatement.execute();
+      JSONObject jsonObject = new JSONObject();
+      JSONArray jsonArray = new JSONArray();
+      try (ResultSet resultSet = preparedStatement.getResultSet()) {
+        while (resultSet.next()) {
+          Map<String, Object> mapProducts = new HashMap<>();
+          mapProducts.put("id", resultSet.getInt("id"));
+          mapProducts.put("name", resultSet.getString("name"));
+          mapProducts.put("stock", resultSet.getInt("stock"));
+          mapProducts.put("price", resultSet.getDouble("price"));
+          jsonArray.add(mapProducts);
+        }
+        jsonObject.put("products", jsonArray);
+        String bytes = jsonObject.toJSONString();
+        response.setData(bytes);
+        response.setSize(jsonObject.size());
+        responseObserver.onNext(response.build());
+      }
+    } catch (SQLException | IOException e) {
+      responseObserver.onError(e);
+    }
+  }
+
+  @Override
+  public void exportProductsToParquetFile(ExportFileRequest request,
+                                          StreamObserver<ExportFileReply> responseObserver) {
   }
 
   @Override
@@ -159,7 +201,7 @@ public class ProductService extends ProductGrpc.ProductImplBase {
     FinalizeSaleReply.Builder response = FinalizeSaleReply.newBuilder();
     try (PreparedStatement preparedStatement = newConnection().prepareStatement(
         "SELECT sum_products FROM "
-            + "((SELECT SUM((quantity) * p.price) AS produtos_somados "
+            + "((SELECT SUM((quantity) * p.price) AS sum_products "
             + "FROM products_shopping_cart psc, products p, shopping_cart sc "
             + "WHERE p.id = psc.id_product "
             + "AND psc.id_shopping_cart = sc.id "
