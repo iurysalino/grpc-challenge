@@ -20,6 +20,7 @@ import grpc.ProductReply;
 import grpc.SaveProductReply;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -27,16 +28,26 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 import model.Product;
+import org.apache.hadoop.fs.Path;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.MessageTypeParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import parquet.CustomParquetWriter;
 
 /**
  * Client class simulation.
  */
 public class Client {
+  private static final Logger logger = LoggerFactory.getLogger(Client.class);
+
   /**
    * Main method to start and execute menu operations.
    */
@@ -177,6 +188,17 @@ public class Client {
               Iterator<ProductReply> iteratorToExportParquetFile =
                   stub.listProducts(findProductsToExportParquetFile);
               List<List<String>> dataOrganizerParquetFileFormat = new ArrayList<>();
+              // Schema Parquet File
+              File resource = new File(properties.getProperty("SCHEMA_PARQUET_FILE"));
+              String rawSchema = new String(Files.readAllBytes(resource.toPath()));
+              MessageType schema = MessageTypeParser.parseMessageType(rawSchema);
+              // Prepare Parquet Writer
+              String outputFilePath = properties.getProperty("PATH_PARQUET_FILE_WRITER");
+              File outputParquetFile = new File(outputFilePath);
+              Path path = new Path(outputParquetFile.toURI().toString());
+              CustomParquetWriter writer = new CustomParquetWriter(path, schema, false,
+                  CompressionCodecName.SNAPPY);
+
               while (iteratorToExportParquetFile.hasNext()) {
                 ProductReply productReplyToExportParquetFile = iteratorToExportParquetFile.next();
                 List<String> parquetFileIten = new ArrayList<>();
@@ -186,6 +208,12 @@ public class Client {
                 parquetFileIten.add(String.valueOf(productReplyToExportParquetFile.getPrice()));
                 dataOrganizerParquetFileFormat.add(parquetFileIten);
               }
+              for (List<String> column : dataOrganizerParquetFileFormat) {
+                logger.info("Writing line: " + Arrays.toString(column.toArray()));
+                writer.write(column);
+              }
+              logger.info("Finished writing Parquet file.");
+              writer.close();
               System.out.println(dataOrganizerParquetFileFormat);
               break;
             default:
