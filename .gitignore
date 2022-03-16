@@ -8,3 +8,7 @@ grpc-challenge.iml
 /src/main/resources/connection.properties
 /src/main/resources/products.json
 /src/main/resources/products-exported.json
+/src/main/resources/schema/.products.parquet.crc
+/src/main/resources/schema/products.parquet
+/src/main/resources/schema/product.schema
+/src/main/resources/schema/
